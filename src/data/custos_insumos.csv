@@ -1,0 +1,8 @@
+ID_Equip,Nome,Sistema,Intervalo_H,Custo_Est_R$,Material_Necessario
+MCP_01,Motor Principal BE,Propulsão,1500,18500.00,1500L Oleo Lube;4 Filtros
+MCP_02,Motor Principal BB,Propulsão,1500,18500.00,1500L Oleo Lube;4 Filtros
+DG_01,Gerador Diesel 01,Energia,500,4200.00,200L Oleo Lube;2 Filtros
+DG_02,Gerador Diesel 02,Energia,500,4200.00,200L Oleo Lube;2 Filtros
+PROP_01,Propulsor Azimutal BE,Propulsão,4000,32000.00,Oleo Hidraulico;Selos
+PROP_02,Propulsor Azimutal BB,Propulsão,4000,32000.00,Oleo Hidraulico;Selos
+GUIN_01,Guincho Manobra,Convés,2000,8500.00,Oleo Hidraulico;Filtros

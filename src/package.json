@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "axios": "^1.6.0",
+    "lucide-react": "latest",
+    "clsx": "latest",
+    "tailwind-merge": "latest"
+  }
+}
