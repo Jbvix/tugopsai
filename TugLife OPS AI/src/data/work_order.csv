@@ -1,0 +1,5 @@
+ID_WO,Equipamento,Descricao_Falha,Gravidade,Pecas_Requisitadas,Impacto_Offhire
+WO_001,MCP_01,Vazamento selo bomba d'água,Media,Kit Vedação,Baixo
+WO_002,DG_02,Oscilação de tensão em carga,Alta,Placa AVR,Alto
+WO_003,GUIN_01,Lentidão no recolhimento,Baixa,Filtro Retorno,Nenhum
+WO_004,PROP_02,Alarme de alta temperatura,Alta,Oleo Hidraulico,Critico
