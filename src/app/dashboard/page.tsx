@@ -1,37 +1,264 @@
 'use client';
-import { TwinEngineCard } from '@/components/tuglife/TwinEngineCard';
-import { InsightIA } from '@/types';
-import { useEffect, useState } from 'react';
+
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, useRef } from 'react';
+import {
+  Anchor, TrendingUp, Clock, Send, Bot
+} from 'lucide-react';
+import { FleetData, ManobraSAA } from '@/types/fleet';
+import { EquipCard } from '@/components/tuglife/EquipCard';
+import { SplashScreen } from '@/components/tuglife/SplashScreen';
+
+function StatBadge({ count, color, label }: { count: number; color: string; label: string }) {
+  return (
+    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${color}`}>
+      <span className="text-xs font-black">{count}</span>
+      <span className="text-[10px] font-medium hidden sm:inline">{label}</span>
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const [insight, setInsight] = useState<string>("Analisando frota...");
+  const [fleetData, setFleetData] = useState<FleetData | null>(null);
+  const [schedule, setSchedule]   = useState<ManobraSAA[]>([]);
+  const [chatHistory, setChatHistory] = useState<{role: 'user'|'agent', text: string}[]>([{
+    role: 'agent',
+    text: 'Olá, Chemaq/Almoxarife virtual online. Posso confirmar status de peças e liberação de máquinas. O que precisa?'
+  }]);
+  const [chatInput, setChatInput]     = useState('');
+  const [isTyping, setIsTyping]       = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [errorData, setErrorData]           = useState(false);
+  const [simulatedInitialDelay, setSimulatedInitialDelay] = useState(true);
 
-  // Exemplo de chamada para a IA ao carregar
   useEffect(() => {
-    fetch('/api/grok', { 
-      method: 'POST', 
-      body: JSON.stringify({ prompt: "Gere o relatório de eficácia matinal." }) 
-    })
-    .then(res => res.json())
-    .then(data => setInsight(data.content));
+    Promise.all([
+      fetch('/api/fleet').then(r => r.json()),
+      fetch('/api/schedule').then(r => r.json())
+    ])
+      .then(([fleet, sch]) => {
+        setFleetData(fleet);
+        setSchedule(sch);
+      })
+      .catch(() => setErrorData(true))
+      .finally(() => setLoadingInitial(false));
+
+    const timer = setTimeout(() => setSimulatedInitialDelay(false), 5500);
+    return () => clearTimeout(timer);
   }, []);
 
-  return (
-    <main className="min-h-screen bg-slate-50 p-4 space-y-4 max-w-md mx-auto">
-      <div className="bg-blue-900 text-white p-6 rounded-3xl shadow-xl">
-        <h2 className="text-blue-200 text-xs font-bold uppercase tracking-widest">IA Insight</h2>
-        <p className="mt-2 text-sm font-medium leading-relaxed">{insight}</p>
-      </div>
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
 
-      <TwinEngineCard 
-        mcp1={{ id: '1', nome: 'BE', horimetro: 1420, limitePreventiva: 1500, status: 'alerta', sistema: 'Propulsão' }}
-        mcp2={{ id: '2', nome: 'BB', horimetro: 1410, limitePreventiva: 1500, status: 'operacional', sistema: 'Propulsão' }}
-      />
-      
-      <div className="bg-white p-4 rounded-2xl border border-slate-200">
-        <h3 className="text-xs font-bold text-slate-400 uppercase">Estoque Crítico</h3>
-        <p className="text-red-500 font-bold mt-1">Óleo SAE 40: Abaixo do ponto de pedido (1.200L)</p>
-      </div>
-    </main>
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatHistory(prev => [...prev, { role: 'user', text: userMessage }]);
+    setIsTyping(true);
+    try {
+      const res = await fetch('/api/grok', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Contexto do Sistema (Simulador Fase Teste): Você atua como Agente de CCO, Almoxarife e Chemaq de frota simultaneamente. Frota SAAM: ${fleetData?.resumo.emManutencao ?? 0} em manutenção, ${fleetData?.resumo.disponiveis ?? 0} livres. Escala: ${schedule.length} manobras agendadas. Mensagem do Supervisor: "${userMessage}"`
+        }),
+      });
+      const data = await res.json();
+      setChatHistory(prev => [...prev, { role: 'agent', text: data.content ?? 'Erro de conexão MESH.' }]);
+    } catch {
+      setChatHistory(prev => [...prev, { role: 'agent', text: 'Desculpe, sinal da ponte caiu. Tente novamente.' }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  if (loadingInitial || simulatedInitialDelay) {
+    return <SplashScreen />;
+  }
+
+  const emManutencao = fleetData?.rebocadores.filter(r => r.status === 'Em_Manutencao') ?? [];
+  const disponiveis  = fleetData?.rebocadores.filter(r => r.status === 'Disponivel') ?? [];
+
+  return (
+    <div className="min-h-screen bg-naval-900 text-white">
+      <header className="sticky top-0 z-50 bg-naval-900/80 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 bg-blue-500/20 rounded-xl border border-blue-500/20 shrink-0">
+              <Anchor size={17} className="text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-sm font-black tracking-tight leading-none">CCO Operacional — Rio de Janeiro</h1>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                {fleetData ? `Base Brasco Caju · ${fleetData.resumo.totalRebocadores} Rebocadores` : 'Carregando frota...'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {fleetData ? (
+              <>
+                {fleetData.resumo.emManutencao > 0 && <StatBadge count={fleetData.resumo.emManutencao} color="bg-red-500/15 text-red-400 border-red-500/30" label="Retido" />}
+                {fleetData.resumo.disponiveis > 0 && <StatBadge count={fleetData.resumo.disponiveis} color="bg-green-500/15 text-green-400 border-green-500/30" label="Livre" />}
+              </>
+            ) : <div className="h-6 w-20 bg-white/10 rounded-full animate-pulse" />}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* COLUNA ESQUERDA: FROTA */}
+        <div className="lg:col-span-5 space-y-6">
+          {errorData ? (
+            <div className="text-center py-12 text-slate-500">Falha ao carregar dados da frota.</div>
+          ) : (
+            <>
+              {emManutencao.length > 0 && (
+                <section className="space-y-3 bg-red-950/10 border border-red-500/10 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+                    <h2 className="text-sm font-black uppercase tracking-widest text-red-400">Frota Impedida (Manutenção)</h2>
+                    <span className="ml-auto text-xs font-bold bg-white/5 text-slate-400 px-2 rounded-full">{emManutencao.length}</span>
+                  </div>
+                  {emManutencao.map(reb => (
+                    <div key={reb.id} className="pt-2 border-t border-white/5">
+                      <h3 className="font-bold text-slate-200 mb-2 flex flex-col gap-1">
+                        <div className="flex items-center gap-2"><Anchor size={14} className="text-red-400"/> {reb.nome}</div>
+                        <span className="text-[10px] text-red-300/60 font-normal pl-5 leading-tight">{reb.motivoIndisponibilidade}</span>
+                      </h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {reb.equipamentos.filter(e => e.status !== 'operacional').map(eq => <EquipCard key={eq.id} eq={eq} />)}
+                      </div>
+                    </div>
+                  ))}
+                </section>
+              )}
+              {disponiveis.length > 0 && (
+                <section className="space-y-3 bg-green-950/10 border border-green-500/10 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                    <h2 className="text-sm font-black uppercase tracking-widest text-green-400">Frota Livre (Ops)</h2>
+                    <span className="ml-auto text-xs font-bold bg-white/5 text-slate-400 px-2 rounded-full">{disponiveis.length}</span>
+                  </div>
+                  {disponiveis.map(reb => (
+                    <div key={reb.id} className="pt-2 border-t border-white/5">
+                      <h3 className="font-bold text-slate-200 mb-2 flex items-center gap-2"><Anchor size={14} className="text-green-400"/> {reb.nome}</h3>
+                    </div>
+                  ))}
+                </section>
+              )}
+            </>
+          )}
+          {fleetData && fleetData.resumo.custoTotalPrevisto > 0 && (
+            <div className="flex items-center gap-3 bg-red-950/30 border border-red-500/20 rounded-2xl px-4 py-3">
+              <TrendingUp size={16} className="text-red-400 shrink-0" />
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wide">Previsão Custos Críticos</p>
+                <p className="text-base font-black text-red-400">R$ {fleetData.resumo.custoTotalPrevisto.toLocaleString('pt-BR')}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* COLUNA DIREITA: ESCALA + CHAT */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          {/* ESCALA SAA */}
+          <section className="flex-shrink-0 bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden flex flex-col">
+            <header className="px-4 py-3 bg-white/[0.02] border-b border-white/5 flex items-center gap-2">
+              <Clock size={16} className="text-amber-400" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-300">Escala de Manobras SAA</h2>
+              <span className="ml-auto text-[10px] text-amber-500 border border-amber-500/20 bg-amber-500/10 px-2 rounded-full">Praticagem RJ</span>
+            </header>
+            <div className="p-0 overflow-x-auto">
+              <table className="w-full text-left text-xs whitespace-nowrap">
+                <thead>
+                  <tr className="bg-white/[0.02] text-slate-400">
+                    <th className="px-4 py-2 font-medium">Navio</th>
+                    <th className="px-4 py-2 font-medium">Ops</th>
+                    <th className="px-4 py-2 font-medium">POB</th>
+                    <th className="px-4 py-2 font-medium bg-amber-500/5 text-amber-300">Prontidão</th>
+                    <th className="px-4 py-2 font-medium">Local</th>
+                    <th className="px-4 py-2 font-medium">RBs</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-slate-300">
+                  {schedule.length === 0 ? (
+                    <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500 italic">Nenhuma manobra SAA programada.</td></tr>
+                  ) : (
+                    schedule.map((manobra, idx) => (
+                      <tr key={idx} className="hover:bg-white/[0.01]">
+                        <td className="px-4 py-3 font-bold text-white">{manobra.navio}</td>
+                        <td className="px-4 py-3 font-medium text-slate-400">{manobra.tipo}</td>
+                        <td className="px-4 py-3">{manobra.pob}</td>
+                        <td className="px-4 py-3 font-bold text-amber-400 bg-amber-500/5">
+                          <span className="flex items-center gap-1.5"><Clock size={12} /> {manobra.horaProntidao}</span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-400 max-w-[150px] truncate">{manobra.destino || manobra.origem}</td>
+                        <td className="px-4 py-3 text-center"><span className="bg-white/10 px-2 py-0.5 rounded-full">{manobra.rebocadoresNecessarios}</span></td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* CHAT GROK */}
+          <section className="flex-1 min-h-[400px] flex flex-col bg-gradient-to-br from-[#0a1f3a] to-[#0d1b2a] border border-blue-500/15 rounded-2xl overflow-hidden">
+            <header className="px-4 py-3 border-b border-white/5 flex items-center gap-2 shrink-0 bg-black/20">
+              <Bot size={16} className="text-blue-400" />
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-blue-400">Terminal Agente Grok</h2>
+                <p className="text-[9px] text-blue-400/60 uppercase">Simulação Chemaq + Almoxarifado + Ops</p>
+              </div>
+            </header>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+              {chatHistory.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-2 ${
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-tr-sm'
+                      : 'bg-white/[0.05] border border-white/10 text-slate-200 rounded-tl-sm font-light'
+                  }`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-white/[0.05] border border-white/10 rounded-2xl rounded-tl-sm px-4 py-2 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce" />
+                    <span className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce [animation-delay:100ms]" />
+                    <span className="w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-bounce [animation-delay:200ms]" />
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+            <form onSubmit={handleSendMessage} className="p-3 shrink-0 bg-black/20 border-t border-white/5 flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                placeholder="Ex: Qual rebocador posso atrasar a preventiva para cobrir às 18h?"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500/50 focus:bg-white/10 transition-colors placeholder-slate-500"
+              />
+              <button
+                type="submit"
+                disabled={isTyping}
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shrink-0"
+              >
+                <Send size={18} />
+              </button>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
   );
 }
