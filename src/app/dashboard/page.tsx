@@ -96,7 +96,18 @@ export default function Dashboard() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorData, setErrorData]           = useState(false);
   const [simulatedInitialDelay, setSimulatedInitialDelay] = useState(true);
+  const [scheduleUpdatedAt, setScheduleUpdatedAt] = useState<Date | null>(null);
   const { positions: aisPositions } = useAISData();
+
+  const fetchSchedule = () => {
+    fetch('/api/schedule')
+      .then(r => r.json())
+      .then((sch: ManobraSAA[]) => {
+        setSchedule(sch);
+        setScheduleUpdatedAt(new Date());
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     Promise.all([
@@ -106,12 +117,17 @@ export default function Dashboard() {
       .then(([fleet, sch]) => {
         setFleetData(fleet);
         setSchedule(sch);
+        setScheduleUpdatedAt(new Date());
       })
       .catch(() => setErrorData(true))
       .finally(() => setLoadingInitial(false));
 
+    const scheduleInterval = setInterval(fetchSchedule, 5 * 60 * 1000);
     const timer = setTimeout(() => setSimulatedInitialDelay(false), 5500);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(scheduleInterval);
+    };
   }, []);
 
   useEffect(() => {
@@ -256,7 +272,14 @@ export default function Dashboard() {
             <header className="px-4 py-3 bg-white/[0.02] border-b border-white/5 flex items-center gap-2">
               <Clock size={16} className="text-amber-400" />
               <h2 className="text-xs font-bold uppercase tracking-widest text-slate-300">Escala de Manobras SAA</h2>
-              <span className="ml-auto text-[10px] text-amber-500 border border-amber-500/20 bg-amber-500/10 px-2 rounded-full">Praticagem RJ</span>
+              <div className="ml-auto flex items-center gap-2">
+                {scheduleUpdatedAt && (
+                  <span className="text-[10px] text-slate-500">
+                    {formatRelativeAge(scheduleUpdatedAt)}
+                  </span>
+                )}
+                <span className="text-[10px] text-amber-500 border border-amber-500/20 bg-amber-500/10 px-2 rounded-full">Praticagem RJ</span>
+              </div>
             </header>
             <div className="p-0 overflow-x-auto">
               <table className="w-full text-left text-xs whitespace-nowrap">
