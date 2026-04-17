@@ -6,7 +6,7 @@ const fleetData: FleetData = {
   rebocadores: [
     {
       id: 'rb-01',
-      nome: 'SAAM RBRAÇO',
+      nome: 'SAAM ITABIRA',
       status: 'Em_Manutencao',
       motivoIndisponibilidade: 'Troca de hélice de proa + vazamento hidráulico no guincho de reboque',
       equipamentos: [
@@ -18,7 +18,7 @@ const fleetData: FleetData = {
     },
     {
       id: 'rb-02',
-      nome: 'SAAM RBCAJU',
+      nome: 'SAAM LANCELOT',
       status: 'Em_Manutencao',
       motivoIndisponibilidade: 'Preventiva de 2.000h + troca de óleo lubrificante motores principais',
       equipamentos: [
@@ -30,7 +30,7 @@ const fleetData: FleetData = {
     },
     {
       id: 'rb-03',
-      nome: 'SAAM RBGUANABARA',
+      nome: 'SAAM HOLANDA',
       status: 'Disponivel',
       equipamentos: [
         { id: 'eq-09', nome: 'Motor Principal BB', tipo: 'Propulsão', status: 'operacional', horasAtual: 1100, proximaTroca: 2000 },
@@ -41,7 +41,7 @@ const fleetData: FleetData = {
     },
     {
       id: 'rb-04',
-      nome: 'SAAM RBNITERÓI',
+      nome: 'SAAM ARIES',
       status: 'Disponivel',
       equipamentos: [
         { id: 'eq-13', nome: 'Motor Principal BB', tipo: 'Propulsão', status: 'operacional', horasAtual: 750, proximaTroca: 2000 },
@@ -52,7 +52,7 @@ const fleetData: FleetData = {
     },
     {
       id: 'rb-05',
-      nome: 'SAAM RBBAÍA',
+      nome: 'SAAM CHILE',
       status: 'Disponivel',
       equipamentos: [
         { id: 'eq-17', nome: 'Motor Principal BB', tipo: 'Propulsão', status: 'operacional', horasAtual: 500, proximaTroca: 2000 },
