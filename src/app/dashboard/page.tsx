@@ -12,7 +12,7 @@ import { useAISData } from '@/hooks/useAISData';
 import { EquipCard } from '@/components/tuglife/EquipCard';
 import { SplashScreen } from '@/components/tuglife/SplashScreen';
 import type { AISPosition } from '@/types/ais';
-import { FLEET_ABBREV, FLEET_NAME_TO_MMSI, marineTrafficUrl } from '@/config/fleet';
+import { FLEET_ABBREV, FLEET_NAME_TO_MMSI } from '@/config/fleet';
 
 const FleetMap = dynamicImport(
   () => import('@/components/tuglife/FleetMap').then((module) => module.FleetMap),
@@ -255,7 +255,7 @@ export default function Dashboard() {
               <Anchor size={17} className="text-blue-400" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-black tracking-tight leading-none">CCO Operacional — Rio de Janeiro</h1>
+              <h1 className="text-sm font-black tracking-tight leading-none">CCM Operacional — Rio de Janeiro</h1>
               <p className="text-[10px] text-slate-500 mt-0.5">
                 {fleetData ? `Base Brasco Caju · ${fleetData.resumo.totalRebocadores} Rebocadores` : 'Carregando frota...'}
               </p>

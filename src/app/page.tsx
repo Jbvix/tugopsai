@@ -17,7 +17,7 @@ export default function Home() {
       </Link>
       
       <footer className="mt-20 text-[10px] uppercase tracking-widest text-blue-400 font-bold">
-        v1.0.0 • Charlie Bravo Engineering
+        v1.0.0 • Jossian Brito
       </footer>
     </div>
   );
