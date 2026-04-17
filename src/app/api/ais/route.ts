@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 const AISSTREAM_URL = 'wss://stream.aisstream.io/v0/stream';
 const AISSTREAM_KEY = process.env.AISSTREAM_API_KEY ?? '';
-const COLLECT_WINDOW_MS = 4_000;
+const COLLECT_WINDOW_MS = 8_000;
 
 interface AISDebugInfo {
   ok: boolean;
