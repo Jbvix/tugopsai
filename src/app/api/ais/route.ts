@@ -88,7 +88,8 @@ interface AISStreamEnvelope {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const wantsDebug = url.searchParams.get('debug') === '1';
-  const noFilter = url.searchParams.get('nofilter') === '1'; // testa sem filtro de MMSI
+  const noFilter = url.searchParams.get('nofilter') === '1';
+  const globalBox = url.searchParams.get('global') === '1'; // testa com bounding box global
 
   if (!AISSTREAM_KEY) {
     const debug = createDebugInfo();
@@ -129,7 +130,7 @@ export async function GET(request: Request) {
         debug.openedAt = new Date().toISOString();
         const subscriptionPayload: Record<string, unknown> = {
           APIKey: AISSTREAM_KEY,
-          BoundingBoxes: AIS_BOUNDING_BOX,
+          BoundingBoxes: globalBox ? [[[-90, -180], [90, 180]]] : AIS_BOUNDING_BOX,
           FilterMessageTypes: ['PositionReport'],
         };
         if (!noFilter) {
