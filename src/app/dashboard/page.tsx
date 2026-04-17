@@ -60,9 +60,7 @@ function formatRelativeAge(value: Date | string | null): string {
 
 
 function TugAISLine({ position }: { position?: AISPosition }) {
-  if (!position) {
-    return <p className="mb-2 pl-5 text-[10px] text-slate-500">AIS: sem sinal recente</p>;
-  }
+  if (!position) return null;
 
   return (
     <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 pl-5 text-[10px] text-slate-400">

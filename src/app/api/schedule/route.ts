@@ -90,6 +90,10 @@ export async function GET() {
       const navio = tooltipDiv?.childNodes[0]?.text?.trim() ?? cells[1].text.split('\n')[0].trim();
       if (!navio || navio.length < 2) continue;
 
+      // Filtra apenas manobras atribuídas à SAAM (EMP.RB = td[15])
+      const empRb = cells[15]?.text?.trim() ?? '';
+      if (empRb !== 'SAA') continue;
+
       // Deduplicação por POB + navio
       const key = `${pobRaw}|${navio}`;
       if (seen.has(key)) continue;
