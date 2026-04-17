@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import dynamicImport from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import {
-  Anchor, TrendingUp, Clock, Send, Bot, Gauge, MapPin, Fuel
+  Anchor, TrendingUp, Clock, Send, Bot, Gauge, MapPin, Fuel, Trash2, Copy, Check
 } from 'lucide-react';
 import { FleetData, ManobraSAA } from '@/types/fleet';
 import { useAISData } from '@/hooks/useAISData';
@@ -102,21 +102,36 @@ function TugAISLine({ position }: { position?: AISPosition }) {
   );
 }
 
+const INITIAL_AGENT_MSG = 'Assistente de Manutenção e Logística online. Monitoro prontidão da frota, combustível e estoque. O que precisa?';
+
 export default function Dashboard() {
   const [fleetData, setFleetData] = useState<FleetData | null>(null);
   const [schedule, setSchedule]   = useState<ManobraSAA[]>([]);
   const [chatHistory, setChatHistory] = useState<{role: 'user'|'agent', text: string}[]>([{
-    role: 'agent',
-    text: 'Olá, Chemaq/Almoxarife virtual online. Posso confirmar status de peças e liberação de máquinas. O que precisa?'
+    role: 'agent', text: INITIAL_AGENT_MSG,
   }]);
   const [chatInput, setChatInput]     = useState('');
   const [isTyping, setIsTyping]       = useState(false);
+  const [copied, setCopied]           = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorData, setErrorData]           = useState(false);
   const [simulatedInitialDelay, setSimulatedInitialDelay] = useState(true);
   const [scheduleUpdatedAt, setScheduleUpdatedAt] = useState<Date | null>(null);
   const { positions: aisPositions } = useAISData();
+
+  const handleClearChat = () => {
+    setChatHistory([{ role: 'agent', text: INITIAL_AGENT_MSG }]);
+  };
+
+  const handleCopyChat = async () => {
+    const text = chatHistory
+      .map(m => `[${m.role === 'user' ? 'Supervisor' : 'Agente'}] ${m.text}`)
+      .join('\n\n');
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const fetchSchedule = () => {
     fetch('/api/schedule')
@@ -345,7 +360,25 @@ export default function Dashboard() {
               <Bot size={16} className="text-blue-400" />
               <div>
                 <h2 className="text-xs font-bold uppercase tracking-widest text-blue-400">Terminal Agente Grok</h2>
-                <p className="text-[9px] text-blue-400/60 uppercase">Simulação Chemaq + Almoxarifado + Ops</p>
+                <p className="text-[9px] text-blue-400/60 uppercase">Manutenção · Logística · Almoxarifado</p>
+              </div>
+              <div className="ml-auto flex items-center gap-1.5">
+                <button
+                  onClick={handleCopyChat}
+                  title="Copiar conversa"
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+                  {copied ? 'Copiado' : 'Copiar'}
+                </button>
+                <button
+                  onClick={handleClearChat}
+                  title="Limpar conversa"
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  <Trash2 size={13} />
+                  Limpar
+                </button>
               </div>
             </header>
             <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
