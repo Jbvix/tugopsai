@@ -9,7 +9,7 @@ function mtVesselUrl(mmsi: string) {
   return (
     `https://www.marinetraffic.com/en/ais/embed/` +
     `zoom:17/mmsi:${mmsi}/` +
-    `maptype:4/shownames:true/show_menu:true/remember:false/get_info:true`
+    `maptype:4/shownames:true/show_menu:true/remember:false/get_info:false`
   );
 }
 
