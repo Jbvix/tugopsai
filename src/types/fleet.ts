@@ -18,6 +18,7 @@ export interface Rebocador {
   status: StatusRebocador;
   motivoIndisponibilidade?: string;
   equipamentos: Equipamento[];
+  combustivelL?: number; // litros atuais; alerta abaixo de 30.000 L
 }
 
 export interface EstoqueFlota {

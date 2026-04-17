@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import dynamicImport from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import {
-  Anchor, TrendingUp, Clock, Send, Bot, Gauge, MapPin
+  Anchor, TrendingUp, Clock, Send, Bot, Gauge, MapPin, Fuel
 } from 'lucide-react';
 import { FleetData, ManobraSAA } from '@/types/fleet';
 import { useAISData } from '@/hooks/useAISData';
@@ -58,6 +58,27 @@ function formatRelativeAge(value: Date | string | null): string {
   return `há ${diffHours}h`;
 }
 
+
+const FUEL_ALERT = 30_000;
+
+function FuelBadge({ litros }: { litros?: number }) {
+  if (litros == null) return null;
+  const pct = Math.min(100, Math.round((litros / 60_000) * 100));
+  const alert = litros <= FUEL_ALERT;
+  return (
+    <div className={`mb-2 flex items-center gap-2 pl-5 text-[10px] ${alert ? 'text-orange-400' : 'text-slate-400'}`}>
+      <Fuel size={10} className={alert ? 'text-orange-400' : 'text-slate-500'} />
+      <span>{(litros / 1000).toFixed(0)}k L</span>
+      <div className="w-20 h-1 rounded-full bg-white/10 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${alert ? 'bg-orange-500' : 'bg-emerald-500'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {alert && <span className="font-bold uppercase tracking-wide">Pedir Abastecimento</span>}
+    </div>
+  );
+}
 
 function TugAISLine({ position }: { position?: AISPosition }) {
   if (!position) return null;
@@ -227,6 +248,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2"><Anchor size={14} className="text-red-400"/> {reb.nome}</div>
                         <span className="text-[10px] text-red-300/60 font-normal pl-5 leading-tight">{reb.motivoIndisponibilidade}</span>
                       </h3>
+                      <FuelBadge litros={reb.combustivelL} />
                       <TugAISLine position={aisByTugName.get(reb.nome)} />
                       <div className="grid grid-cols-1 gap-2">
                         {reb.equipamentos.filter(e => e.status !== 'operacional').map(eq => <EquipCard key={eq.id} eq={eq} />)}
@@ -245,6 +267,7 @@ export default function Dashboard() {
                   {disponiveis.map(reb => (
                     <div key={reb.id} className="pt-2 border-t border-white/5">
                       <h3 className="font-bold text-slate-200 mb-2 flex items-center gap-2"><Anchor size={14} className="text-green-400"/> {reb.nome}</h3>
+                      <FuelBadge litros={reb.combustivelL} />
                       <TugAISLine position={aisByTugName.get(reb.nome)} />
                     </div>
                   ))}
@@ -285,7 +308,7 @@ export default function Dashboard() {
                   <tr className="bg-white/[0.02] text-slate-400">
                     <th className="px-4 py-2 font-medium">Navio</th>
                     <th className="px-4 py-2 font-medium">Ops</th>
-                    <th className="px-4 py-2 font-medium">POB</th>
+                    <th className="px-4 py-2 font-medium">Data / POB</th>
                     <th className="px-4 py-2 font-medium bg-amber-500/5 text-amber-300">Prontidão</th>
                     <th className="px-4 py-2 font-medium">Local</th>
                     <th className="px-4 py-2 font-medium">RBs</th>
@@ -299,7 +322,10 @@ export default function Dashboard() {
                       <tr key={idx} className="hover:bg-white/[0.01]">
                         <td className="px-4 py-3 font-bold text-white">{manobra.navio}</td>
                         <td className="px-4 py-3 font-medium text-slate-400">{manobra.tipo}</td>
-                        <td className="px-4 py-3">{manobra.pob}</td>
+                        <td className="px-4 py-3">
+                          <div className="text-slate-300">{manobra.pob.slice(0, 5)}</div>
+                          <div className="text-[10px] text-slate-500">{manobra.pob.slice(6)}</div>
+                        </td>
                         <td className="px-4 py-3 font-bold text-amber-400 bg-amber-500/5">
                           <span className="flex items-center gap-1.5"><Clock size={12} /> {manobra.horaProntidao}</span>
                         </td>

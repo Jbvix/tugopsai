@@ -8,6 +8,7 @@ const fleetData: FleetData = {
       id: 'rb-01',
       nome: 'SAAM ITABIRA',
       status: 'Em_Manutencao',
+      combustivelL: 52000,
       motivoIndisponibilidade: 'Turbina MCP BB + Lona de Freio Guincho de Manobra',
       equipamentos: [
         { id: 'it-mcp-bb', nome: 'MCP BB — Motor Principal Boreste', tipo: 'MCP', status: 'critico', horasAtual: 4200, proximaTroca: 4000, descricao: 'Turbina com perda de pressão — substituição em andamento' },
@@ -25,6 +26,7 @@ const fleetData: FleetData = {
       id: 'rb-02',
       nome: 'SAAM LANCELOT',
       status: 'Em_Manutencao',
+      combustivelL: 47000,
       motivoIndisponibilidade: 'Preventiva 2.000h MCP BB e BE — troca de óleo, filtros e válvulas termostáticas',
       equipamentos: [
         { id: 'lc-mcp-bb', nome: 'MCP BB — Motor Principal Boreste', tipo: 'MCP', status: 'alerta', horasAtual: 2060, proximaTroca: 2000, descricao: 'Preventiva em execução — óleo cárter, filtros e válvulas termostáticas' },
@@ -42,6 +44,7 @@ const fleetData: FleetData = {
       id: 'rb-03',
       nome: 'SAAM HOLANDA',
       status: 'Disponivel',
+      combustivelL: 58000,
       equipamentos: [
         { id: 'ho-mcp-bb', nome: 'MCP BB — Motor Principal Boreste', tipo: 'MCP', status: 'operacional', horasAtual: 1400, proximaTroca: 2000 },
         { id: 'ho-mcp-be', nome: 'MCP BE — Motor Principal Bombordo', tipo: 'MCP', status: 'operacional', horasAtual: 1400, proximaTroca: 2000 },
@@ -58,6 +61,7 @@ const fleetData: FleetData = {
       id: 'rb-04',
       nome: 'SAAM ARIES',
       status: 'Disponivel',
+      combustivelL: 28000,
       equipamentos: [
         { id: 'ar-mcp-bb', nome: 'MCP BB — Motor Principal Boreste', tipo: 'MCP', status: 'operacional', horasAtual: 850, proximaTroca: 2000 },
         { id: 'ar-mcp-be', nome: 'MCP BE — Motor Principal Bombordo', tipo: 'MCP', status: 'operacional', horasAtual: 850, proximaTroca: 2000 },
@@ -74,6 +78,7 @@ const fleetData: FleetData = {
       id: 'rb-05',
       nome: 'SAAM CHILE',
       status: 'Disponivel',
+      combustivelL: 60000,
       equipamentos: [
         { id: 'ch-mcp-bb', nome: 'MCP BB — Motor Principal Boreste', tipo: 'MCP', status: 'operacional', horasAtual: 550, proximaTroca: 2000 },
         { id: 'ch-mcp-be', nome: 'MCP BE — Motor Principal Bombordo', tipo: 'MCP', status: 'operacional', horasAtual: 550, proximaTroca: 2000 },
@@ -90,6 +95,7 @@ const fleetData: FleetData = {
       id: 'rb-06',
       nome: 'SAAM ARTHUR',
       status: 'Disponivel',
+      combustivelL: 31000,
       equipamentos: [
         { id: 'au-mcp-bb', nome: 'MCP BB — Motor Principal Boreste', tipo: 'MCP', status: 'operacional', horasAtual: 1100, proximaTroca: 2000 },
         { id: 'au-mcp-be', nome: 'MCP BE — Motor Principal Bombordo', tipo: 'MCP', status: 'operacional', horasAtual: 1100, proximaTroca: 2000 },

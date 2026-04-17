@@ -15,14 +15,16 @@ function calcRebocadores(loa: number): number {
   return 1;
 }
 
-// POB "17/04 14:00" → extrai hora e calcula prontidão +30min
+// POB "17/04 14:00" → mantém data+hora completa; prontidão = POB − 30min
 function parsePob(raw: string): { pob: string; horaProntidao: string } {
-  const match = raw.match(/(\d{2}):(\d{2})$/);
+  const match = raw.match(/^(\d{2}\/\d{2})\s+(\d{2}):(\d{2})$/);
   if (!match) return { pob: raw.trim(), horaProntidao: raw.trim() };
-  const totalMin = Number(match[1]) * 60 + Number(match[2]) + 30;
-  const ph = String(Math.floor(totalMin / 60) % 24).padStart(2, '0');
-  const pm = String(totalMin % 60).padStart(2, '0');
-  return { pob: `${match[1]}:${match[2]}`, horaProntidao: `${ph}:${pm}` };
+  const [, date, h, m] = match;
+  const totalMin = Number(h) * 60 + Number(m) - 30;
+  const adj = ((totalMin % 1440) + 1440) % 1440; // wrap midnight
+  const ph = String(Math.floor(adj / 60)).padStart(2, '0');
+  const pm = String(adj % 60).padStart(2, '0');
+  return { pob: `${date} ${h}:${m}`, horaProntidao: `${ph}:${pm}` };
 }
 
 function parseTipo(raw: string): TipoManobra {
