@@ -15,6 +15,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "latest",
     "next": "latest",
+    "node-html-parser": "^7.1.0",
     "react": "latest",
     "react-leaflet": "^5.0.0",
     "tailwind-merge": "latest",
