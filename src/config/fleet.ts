@@ -7,6 +7,25 @@ export const FLEET_MMSI: Record<string, string> = {
   '710015310': 'SAAM ARTHUR',
 };
 
+// Abreviações usadas nos botões de localização
+export const FLEET_ABBREV: Record<string, string> = {
+  'SAAM ITABIRA':  'IB',
+  'SAAM LANCELOT': 'LC',
+  'SAAM HOLANDA':  'HL',
+  'SAAM ARIES':    'AR',
+  'SAAM CHILE':    'CH',
+  'SAAM ARTHUR':   'AT',
+};
+
+// Mapa inverso nome → MMSI
+export const FLEET_NAME_TO_MMSI: Record<string, string> = Object.fromEntries(
+  Object.entries(FLEET_MMSI).map(([mmsi, name]) => [name, mmsi]),
+);
+
+export function marineTrafficUrl(mmsi: string): string {
+  return `https://www.marinetraffic.com/en/ais/details/ships/mmsi:${mmsi}`;
+}
+
 export const AIS_BOUNDING_BOX: [[number, number], [number, number]][] = [
   [[-23.1, -43.4], [-22.6, -43.0]],
 ];

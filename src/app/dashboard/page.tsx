@@ -12,6 +12,7 @@ import { useAISData } from '@/hooks/useAISData';
 import { EquipCard } from '@/components/tuglife/EquipCard';
 import { SplashScreen } from '@/components/tuglife/SplashScreen';
 import type { AISPosition } from '@/types/ais';
+import { FLEET_ABBREV, FLEET_NAME_TO_MMSI, marineTrafficUrl } from '@/config/fleet';
 
 const FleetMap = dynamicImport(
   () => import('@/components/tuglife/FleetMap').then((module) => module.FleetMap),
@@ -80,23 +81,51 @@ function FuelBadge({ litros }: { litros?: number }) {
   );
 }
 
+function TugLocateBadge({ nome }: { nome: string }) {
+  const mmsi = FLEET_NAME_TO_MMSI[nome];
+  const abbrev = FLEET_ABBREV[nome] ?? nome;
+  if (!mmsi) return null;
+  return (
+    <a
+      href={marineTrafficUrl(mmsi)}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Localizar ${nome} no MarineTraffic`}
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/30 transition-colors"
+    >
+      <MapPin size={9} />
+      {abbrev}
+    </a>
+  );
+}
+
+function AISStatusBadge({ position }: { position?: AISPosition }) {
+  if (!position) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] bg-white/5 text-slate-500 border border-white/5">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+        Sem Sinal
+      </span>
+    );
+  }
+  const atBase = position.navStatus === 'Na Base';
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
+      atBase
+        ? 'bg-green-500/10 text-green-400 border-green-500/20'
+        : 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${atBase ? 'bg-green-500' : 'bg-amber-500'}`} />
+      {atBase ? 'Na Base' : 'Fora da Base'}
+    </span>
+  );
+}
+
 function TugAISLine({ position }: { position?: AISPosition }) {
   if (!position) return null;
-
   return (
     <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 pl-5 text-[10px] text-slate-400">
-      <span className="inline-flex items-center gap-1">
-        <Gauge size={10} />
-        {position.sog.toFixed(1)} kn
-      </span>
-      <span className="inline-flex items-center gap-1">
-        <MapPin size={10} />
-        {position.lat.toFixed(3)}, {position.lon.toFixed(3)}
-      </span>
-      <span className="inline-flex items-center gap-1">
-        <Anchor size={10} />
-        {position.navStatus}
-      </span>
+      <span className="inline-flex items-center gap-1"><Gauge size={10} />{position.sog.toFixed(1)} kn</span>
       <span>{formatRelativeAge(position.updatedAt)}</span>
     </div>
   );
@@ -259,10 +288,15 @@ export default function Dashboard() {
                   </div>
                   {emManutencao.map(reb => (
                     <div key={reb.id} className="pt-2 border-t border-white/5">
-                      <h3 className="font-bold text-slate-200 mb-2 flex flex-col gap-1">
-                        <div className="flex items-center gap-2"><Anchor size={14} className="text-red-400"/> {reb.nome}</div>
-                        <span className="text-[10px] text-red-300/60 font-normal pl-5 leading-tight">{reb.motivoIndisponibilidade}</span>
-                      </h3>
+                      <div className="mb-2 flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Anchor size={14} className="text-red-400 shrink-0" />
+                          <span className="font-bold text-slate-200">{reb.nome}</span>
+                          <TugLocateBadge nome={reb.nome} />
+                          <AISStatusBadge position={aisByTugName.get(reb.nome)} />
+                        </div>
+                        <span className="text-[10px] text-red-300/60 pl-5 leading-tight">{reb.motivoIndisponibilidade}</span>
+                      </div>
                       <FuelBadge litros={reb.combustivelL} />
                       <TugAISLine position={aisByTugName.get(reb.nome)} />
                       <div className="grid grid-cols-1 gap-2">
@@ -281,7 +315,12 @@ export default function Dashboard() {
                   </div>
                   {disponiveis.map(reb => (
                     <div key={reb.id} className="pt-2 border-t border-white/5">
-                      <h3 className="font-bold text-slate-200 mb-2 flex items-center gap-2"><Anchor size={14} className="text-green-400"/> {reb.nome}</h3>
+                      <div className="mb-2 flex items-center gap-2 flex-wrap">
+                        <Anchor size={14} className="text-green-400 shrink-0" />
+                        <span className="font-bold text-slate-200">{reb.nome}</span>
+                        <TugLocateBadge nome={reb.nome} />
+                        <AISStatusBadge position={aisByTugName.get(reb.nome)} />
+                      </div>
                       <FuelBadge litros={reb.combustivelL} />
                       <TugAISLine position={aisByTugName.get(reb.nome)} />
                     </div>

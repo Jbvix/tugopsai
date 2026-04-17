@@ -24,7 +24,8 @@ export function useAISData(): UseAISDataResult {
 
     const fetchPositions = async () => {
       try {
-        const response = await fetch('/api/ais', { cache: 'no-store' });
+        // global=1 usa bounding box mundial para capturar AIS satelital dos MMSIs cadastrados
+        const response = await fetch('/api/ais?global=1', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch AIS positions');
         }
