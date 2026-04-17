@@ -17,9 +17,12 @@ interface AISDebugInfo {
   trackedMmsiCount: number;
   windowMs: number;
   startedAt: string;
+  openedAt: string | null;      // quando onopen disparou
+  subscriptionSentAt: string | null; // quando subscription foi enviada
   finishedAt: string;
   durationMs: number;
   messageEvents: number;
+  allMessageTypes: string[];    // todos os tipos recebidos (inclui não-PositionReport)
   lastMessageType: string | null;
   closeCode: number | null;
   closeReason: string | null;
@@ -41,9 +44,12 @@ function createDebugInfo(): AISDebugInfo {
     trackedMmsiCount: Object.keys(FLEET_MMSI).length,
     windowMs: COLLECT_WINDOW_MS,
     startedAt: new Date().toISOString(),
+    openedAt: null,
+    subscriptionSentAt: null,
     finishedAt: '',
     durationMs: 0,
     messageEvents: 0,
+    allMessageTypes: [],
     lastMessageType: null,
     closeCode: null,
     closeReason: null,
@@ -119,14 +125,15 @@ export async function GET(request: Request) {
       const timer = setTimeout(() => finish('timeout'), COLLECT_WINDOW_MS);
 
       ws.onopen = () => {
-        ws.send(
-          JSON.stringify({
-            APIKey: AISSTREAM_KEY,
-            BoundingBoxes: AIS_BOUNDING_BOX,
-            FiltersShipMMSI: Object.keys(FLEET_MMSI),
-            FilterMessageTypes: ['PositionReport'],
-          }),
-        );
+        debug.openedAt = new Date().toISOString();
+        const subscription = JSON.stringify({
+          APIKey: AISSTREAM_KEY,
+          BoundingBoxes: AIS_BOUNDING_BOX,
+          FiltersShipMMSI: Object.keys(FLEET_MMSI),
+          FilterMessageTypes: ['PositionReport'],
+        });
+        ws.send(subscription);
+        debug.subscriptionSentAt = new Date().toISOString();
       };
 
       ws.onmessage = (event) => {
@@ -134,6 +141,9 @@ export async function GET(request: Request) {
           const data = JSON.parse(String(event.data)) as AISStreamEnvelope;
           debug.messageEvents += 1;
           debug.lastMessageType = data.MessageType ?? null;
+          if (!debug.allMessageTypes.includes(data.MessageType ?? '')) {
+            debug.allMessageTypes.push(data.MessageType ?? 'unknown');
+          }
           if (data.MessageType !== 'PositionReport') {
             return;
           }
