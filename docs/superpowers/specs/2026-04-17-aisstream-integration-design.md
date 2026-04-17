@@ -140,6 +140,19 @@ Estados: positions: AISPosition[], loading: boolean, error: boolean, lastUpdated
 - Ícone SVG de âncora/rebocador rotacionado pelo `heading`
 - Tooltip ao click: nome, SOG, rumo, status nav, `updatedAt`
 
+**Geofence — Base SAAM Brasco Caju:**
+- Polígono `L.polygon()` sobreposto ao cais do Porto Brasco
+- Coordenadas aproximadas (ajustáveis):
+  ```
+  [-22.878, -43.219]  // NW — entrada do cais
+  [-22.873, -43.211]  // NE
+  [-22.882, -43.206]  // SE
+  [-22.887, -43.214]  // SW
+  ```
+- Estilo: borda azul-naval `#3b82f6`, preenchimento `rgba(59,130,246,0.12)`
+- Label fixo: `⚓ Base SAAM — Brasco Caju`
+- Lógica: se `lat/lon` do rebocador cair dentro do polígono → status automático `"Na Base"` nos cards (sobrescreve `navStatus` do AIS)
+
 ---
 
 ## Integração no Dashboard
@@ -168,6 +181,6 @@ Estados: positions: AISPosition[], loading: boolean, error: boolean, lastUpdated
 ## Fora do Escopo
 
 - Histórico de trajectória (trilha do rebocador)
-- Alertas de geofence
+- Alertas de geofence por email/push
 - Camada náutica OpenSeaMap (pode ser adicionada futuramente)
 - Integração com dados de calado ou AIS dinâmico tipo B
