@@ -2,9 +2,9 @@
 
 const EMBED_URL =
   'https://www.marinetraffic.com/en/ais/embed/' +
-  'zoom:13/' +
-  'centery:-22.8877/' +
-  'centerx:-43.1968/' +
+  'zoom:15/' +
+  'centery:-22.8701/' +
+  'centerx:-43.2132/' +
   'maptype:0/' +
   'shownames:true/' +
   'showmenu:false/' +

@@ -11,14 +11,15 @@ export const AIS_BOUNDING_BOX: [[number, number], [number, number]][] = [
   [[-23.1, -43.4], [-22.6, -43.0]],
 ];
 
-export const FLEET_MAP_CENTER: [number, number] = [-22.88, -43.18];
-export const FLEET_MAP_ZOOM = 12;
+export const FLEET_MAP_CENTER: [number, number] = [-22.8701, -43.2132];
+export const FLEET_MAP_ZOOM = 15;
 
+// Polígono real do cais BRASCO — fonte: shapefile oficial (WKT lon/lat convertido)
 export const BRASCO_GEOFENCE: [number, number][] = [
-  [-22.878, -43.219],
-  [-22.873, -43.211],
-  [-22.882, -43.206],
-  [-22.887, -43.214],
+  [-22.8702826, -43.2151462],
+  [-22.871884,  -43.2132579],
+  [-22.8698674, -43.2112838],
+  [-22.8683253, -43.213215 ],
 ];
 
 export function isInsideGeofence(lat: number, lon: number): boolean {
