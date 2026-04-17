@@ -88,6 +88,7 @@ interface AISStreamEnvelope {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const wantsDebug = url.searchParams.get('debug') === '1';
+  const noFilter = url.searchParams.get('nofilter') === '1'; // testa sem filtro de MMSI
 
   if (!AISSTREAM_KEY) {
     const debug = createDebugInfo();
@@ -126,12 +127,15 @@ export async function GET(request: Request) {
 
       ws.onopen = () => {
         debug.openedAt = new Date().toISOString();
-        const subscription = JSON.stringify({
+        const subscriptionPayload: Record<string, unknown> = {
           APIKey: AISSTREAM_KEY,
           BoundingBoxes: AIS_BOUNDING_BOX,
-          FiltersShipMMSI: Object.keys(FLEET_MMSI),
           FilterMessageTypes: ['PositionReport'],
-        });
+        };
+        if (!noFilter) {
+          subscriptionPayload.FiltersShipMMSI = Object.keys(FLEET_MMSI);
+        }
+        const subscription = JSON.stringify(subscriptionPayload);
         ws.send(subscription);
         debug.subscriptionSentAt = new Date().toISOString();
       };
