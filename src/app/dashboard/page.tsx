@@ -81,21 +81,31 @@ function FuelBadge({ litros }: { litros?: number }) {
   );
 }
 
-function TugLocateBadge({ nome }: { nome: string }) {
-  const mmsi = FLEET_NAME_TO_MMSI[nome];
+function TugLocateBadge({
+  nome,
+  selected,
+  onLocate,
+}: {
+  nome: string;
+  selected: boolean;
+  onLocate: (mmsi: string) => void;
+}) {
+  const mmsi   = FLEET_NAME_TO_MMSI[nome];
   const abbrev = FLEET_ABBREV[nome] ?? nome;
   if (!mmsi) return null;
   return (
-    <a
-      href={marineTrafficUrl(mmsi)}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={`Localizar ${nome} no MarineTraffic`}
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/20 hover:bg-blue-500/30 transition-colors"
+    <button
+      onClick={() => onLocate(mmsi)}
+      title={`Localizar ${nome} no mapa`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-colors ${
+        selected
+          ? 'bg-blue-500/40 text-white border-blue-400'
+          : 'bg-blue-500/15 text-blue-400 border-blue-500/20 hover:bg-blue-500/30'
+      }`}
     >
       <MapPin size={9} />
       {abbrev}
-    </a>
+    </button>
   );
 }
 
@@ -142,7 +152,14 @@ export default function Dashboard() {
   const [chatInput, setChatInput]     = useState('');
   const [isTyping, setIsTyping]       = useState(false);
   const [copied, setCopied]           = useState(false);
+  const [selectedMmsi, setSelectedMmsi] = useState<string | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const handleLocate = (mmsi: string) => {
+    setSelectedMmsi(prev => prev === mmsi ? null : mmsi);
+    mapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorData, setErrorData]           = useState(false);
   const [simulatedInitialDelay, setSimulatedInitialDelay] = useState(true);
@@ -255,18 +272,26 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 pt-4">
+      <div className="max-w-7xl mx-auto px-4 pt-4" ref={mapRef}>
         <section className="overflow-hidden rounded-[28px] border border-white/5 bg-[#061321] shadow-2xl shadow-black/20">
           <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.24em] text-cyan-200">Mapa AIS da Frota</h2>
               <p className="mt-1 text-[10px] text-slate-400">
-                Base Brasco Caju · Baía de Guanabara
+                {selectedMmsi ? `Rastreando MMSI ${selectedMmsi}` : 'Base Brasco Caju · Baía de Guanabara'}
               </p>
             </div>
+            {selectedMmsi && (
+              <button
+                onClick={() => setSelectedMmsi(null)}
+                className="text-[10px] text-slate-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1 rounded-lg transition-colors"
+              >
+                ← Frota
+              </button>
+            )}
           </div>
           <div className="h-80 lg:h-96">
-            <FleetMap />
+            <FleetMap focusMmsi={selectedMmsi} />
           </div>
         </section>
       </div>
@@ -292,7 +317,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           <Anchor size={14} className="text-red-400 shrink-0" />
                           <span className="font-bold text-slate-200">{reb.nome}</span>
-                          <TugLocateBadge nome={reb.nome} />
+                          <TugLocateBadge nome={reb.nome} selected={selectedMmsi === FLEET_NAME_TO_MMSI[reb.nome]} onLocate={handleLocate} />
                           <AISStatusBadge position={aisByTugName.get(reb.nome)} />
                         </div>
                         <span className="text-[10px] text-red-300/60 pl-5 leading-tight">{reb.motivoIndisponibilidade}</span>
@@ -318,7 +343,7 @@ export default function Dashboard() {
                       <div className="mb-2 flex items-center gap-2 flex-wrap">
                         <Anchor size={14} className="text-green-400 shrink-0" />
                         <span className="font-bold text-slate-200">{reb.nome}</span>
-                        <TugLocateBadge nome={reb.nome} />
+                        <TugLocateBadge nome={reb.nome} selected={selectedMmsi === FLEET_NAME_TO_MMSI[reb.nome]} onLocate={handleLocate} />
                         <AISStatusBadge position={aisByTugName.get(reb.nome)} />
                       </div>
                       <FuelBadge litros={reb.combustivelL} />
