@@ -8,11 +8,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/leaflet": "^1.9.21",
     "axios": "^1.6.0",
     "clsx": "latest",
+    "leaflet": "^1.9.4",
     "lucide-react": "latest",
     "next": "latest",
     "react": "latest",
+    "react-leaflet": "^5.0.0",
     "tailwind-merge": "latest"
   },
   "devDependencies": {

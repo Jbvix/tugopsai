@@ -2,19 +2,105 @@
 
 export const dynamic = 'force-dynamic';
 
+import dynamicImport from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import {
-  Anchor, TrendingUp, Clock, Send, Bot
+  Anchor, TrendingUp, Clock, Send, Bot, Gauge, MapPin
 } from 'lucide-react';
 import { FleetData, ManobraSAA } from '@/types/fleet';
+import { useAISData } from '@/hooks/useAISData';
 import { EquipCard } from '@/components/tuglife/EquipCard';
 import { SplashScreen } from '@/components/tuglife/SplashScreen';
+import type { AISPosition } from '@/types/ais';
+
+const FleetMap = dynamicImport(
+  () => import('@/components/tuglife/FleetMap').then((module) => module.FleetMap),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-white/[0.03]" />,
+  },
+);
 
 function StatBadge({ count, color, label }: { count: number; color: string; label: string }) {
   return (
     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${color}`}>
       <span className="text-xs font-black">{count}</span>
       <span className="text-[10px] font-medium hidden sm:inline">{label}</span>
+    </div>
+  );
+}
+
+function formatRelativeAge(value: Date | string | null): string {
+  if (!value) {
+    return 'Sem atualização';
+  }
+
+  const parsedDate = value instanceof Date ? value : new Date(value);
+  const parsedTime = parsedDate.getTime();
+
+  if (Number.isNaN(parsedTime)) {
+    return 'Sem atualização';
+  }
+
+  const diffMs = Math.max(0, Date.now() - parsedTime);
+  const diffSeconds = Math.floor(diffMs / 1000);
+
+  if (diffSeconds < 60) {
+    return `há ${Math.max(diffSeconds, 1)}s`;
+  }
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) {
+    return `há ${diffMinutes}min`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  return `há ${diffHours}h`;
+}
+
+function AISBadge({ error, loading, lastUpdated }: { error: boolean; loading: boolean; lastUpdated: Date | null }) {
+  const ageMs = lastUpdated ? Date.now() - lastUpdated.getTime() : null;
+  const isFresh = !error && ageMs !== null && ageMs < 120_000;
+  const statusClass = isFresh
+    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+    : 'bg-slate-500/15 text-slate-300 border-slate-500/30';
+  const dotClass = isFresh ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400';
+
+  let label = 'AIS OFF';
+  if (loading && !lastUpdated) {
+    label = 'AIS...';
+  } else if (!error && lastUpdated) {
+    label = `AIS ${formatRelativeAge(lastUpdated)}`;
+  }
+
+  return (
+    <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusClass}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function TugAISLine({ position }: { position?: AISPosition }) {
+  if (!position) {
+    return <p className="mb-2 pl-5 text-[10px] text-slate-500">AIS: sem sinal recente</p>;
+  }
+
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 pl-5 text-[10px] text-slate-400">
+      <span className="inline-flex items-center gap-1">
+        <Gauge size={10} />
+        {position.sog.toFixed(1)} kn
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <MapPin size={10} />
+        {position.lat.toFixed(3)}, {position.lon.toFixed(3)}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <Anchor size={10} />
+        {position.navStatus}
+      </span>
+      <span>{formatRelativeAge(position.updatedAt)}</span>
     </div>
   );
 }
@@ -32,6 +118,7 @@ export default function Dashboard() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorData, setErrorData]           = useState(false);
   const [simulatedInitialDelay, setSimulatedInitialDelay] = useState(true);
+  const { positions: aisPositions, loading: aisLoading, error: aisError, lastUpdated: aisUpdated } = useAISData();
 
   useEffect(() => {
     Promise.all([
@@ -83,6 +170,7 @@ export default function Dashboard() {
 
   const emManutencao = fleetData?.rebocadores.filter(r => r.status === 'Em_Manutencao') ?? [];
   const disponiveis  = fleetData?.rebocadores.filter(r => r.status === 'Disponivel') ?? [];
+  const aisByTugName = new Map(aisPositions.map((position) => [position.nome, position]));
 
   return (
     <div className="min-h-screen bg-naval-900 text-white">
@@ -104,11 +192,31 @@ export default function Dashboard() {
               <>
                 {fleetData.resumo.emManutencao > 0 && <StatBadge count={fleetData.resumo.emManutencao} color="bg-red-500/15 text-red-400 border-red-500/30" label="Retido" />}
                 {fleetData.resumo.disponiveis > 0 && <StatBadge count={fleetData.resumo.disponiveis} color="bg-green-500/15 text-green-400 border-green-500/30" label="Livre" />}
+                <AISBadge error={aisError} loading={aisLoading} lastUpdated={aisUpdated} />
               </>
             ) : <div className="h-6 w-20 bg-white/10 rounded-full animate-pulse" />}
           </div>
         </div>
       </header>
+
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <section className="overflow-hidden rounded-[28px] border border-white/5 bg-[#061321] shadow-2xl shadow-black/20">
+          <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.24em] text-cyan-200">Mapa AIS da Frota</h2>
+              <p className="mt-1 text-[10px] text-slate-400">
+                Base Brasco Caju · Polling de 60s · {aisUpdated ? `Última leitura ${formatRelativeAge(aisUpdated)}` : 'Aguardando primeira leitura'}
+              </p>
+            </div>
+            <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+              {aisPositions.length > 0 ? `${aisPositions.length} com sinal` : 'Sem sinal'}
+            </div>
+          </div>
+          <div className="h-80 lg:h-96">
+            <FleetMap positions={aisPositions} />
+          </div>
+        </section>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -131,6 +239,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2"><Anchor size={14} className="text-red-400"/> {reb.nome}</div>
                         <span className="text-[10px] text-red-300/60 font-normal pl-5 leading-tight">{reb.motivoIndisponibilidade}</span>
                       </h3>
+                      <TugAISLine position={aisByTugName.get(reb.nome)} />
                       <div className="grid grid-cols-1 gap-2">
                         {reb.equipamentos.filter(e => e.status !== 'operacional').map(eq => <EquipCard key={eq.id} eq={eq} />)}
                       </div>
@@ -148,6 +257,7 @@ export default function Dashboard() {
                   {disponiveis.map(reb => (
                     <div key={reb.id} className="pt-2 border-t border-white/5">
                       <h3 className="font-bold text-slate-200 mb-2 flex items-center gap-2"><Anchor size={14} className="text-green-400"/> {reb.nome}</h3>
+                      <TugAISLine position={aisByTugName.get(reb.nome)} />
                     </div>
                   ))}
                 </section>

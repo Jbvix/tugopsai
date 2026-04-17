@@ -61,6 +61,17 @@ const fleetData: FleetData = {
         { id: 'eq-20', nome: 'Guincho de Reboque', tipo: 'Reboque', status: 'operacional' },
       ],
     },
+    {
+      id: 'rb-06',
+      nome: 'SAAM ARTHUR',
+      status: 'Disponivel',
+      equipamentos: [
+        { id: 'eq-21', nome: 'Motor Principal BB', tipo: 'Propulsão', status: 'operacional', horasAtual: 920, proximaTroca: 2000 },
+        { id: 'eq-22', nome: 'Motor Principal BE', tipo: 'Propulsão', status: 'operacional', horasAtual: 920, proximaTroca: 2000 },
+        { id: 'eq-23', nome: 'Guincho de Reboque', tipo: 'Reboque', status: 'operacional' },
+        { id: 'eq-24', nome: 'Gerador de Emergência', tipo: 'Elétrico', status: 'operacional' },
+      ],
+    },
   ],
   estoque: {
     diesel_L: 42000,
@@ -68,8 +79,8 @@ const fleetData: FleetData = {
     autonomiaDias: 12,
   },
   resumo: {
-    totalRebocadores: 5,
-    disponiveis: 3,
+    totalRebocadores: 6,
+    disponiveis: 4,
     emManutencao: 2,
     emOperacao: 0,
     custoTotalPrevisto: 87500,
