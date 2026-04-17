@@ -70,7 +70,7 @@ O TugLife OPS AI centraliza em um único dashboard:
 | Framework | Next.js 16 (App Router) |
 | Linguagem | TypeScript 5 |
 | Estilo | Tailwind CSS (paleta `naval`) |
-| AIS Tracking | AISStream.io WebSocket (`ws`) |
+| Mapa | MarineTraffic embed |
 | Web Scraping | `node-html-parser` |
 | IA | xAI Grok API |
 | Deploy | Netlify + `@netlify/plugin-nextjs` |
@@ -84,7 +84,6 @@ O TugLife OPS AI centraliza em um único dashboard:
 | `GET /api/fleet` | Status da frota, equipamentos e combustível |
 | `GET /api/schedule` | Escala SAA em tempo real (scraping Praticagem RJ) |
 | `POST /api/grok` | Chat com o agente de manutenção e logística |
-| `GET /api/ais` | Posições AIS via AISStream WebSocket |
 
 ---
 
@@ -93,8 +92,7 @@ O TugLife OPS AI centraliza em um único dashboard:
 ### Variáveis de Ambiente
 
 ```env
-AISSTREAM_API_KEY=   # AISStream.io — rastreamento AIS
-XAI_API_KEY=         # xAI — agente Grok
+XAI_API_KEY=   # xAI — agente Grok
 ```
 
 Configure em **Netlify → Site configuration → Environment variables**.
@@ -123,14 +121,12 @@ O deploy é automático via Netlify a cada push na branch `main`. Requer o plugi
 src/
 ├── app/
 │   ├── api/
-│   │   ├── ais/        # WebSocket AISStream
-│   │   ├── fleet/      # Dados da frota
+│   │   ├── fleet/      # Dados da frota e combustível
 │   │   ├── grok/       # Agente xAI
 │   │   └── schedule/   # Scraping Praticagem RJ
 │   └── dashboard/      # Interface principal
 ├── components/tuglife/  # FleetMap, EquipCard, SplashScreen
-├── config/fleet.ts      # MMSIs, geofence, bounding box
-├── hooks/useAISData.ts  # Polling AIS
+├── config/fleet.ts      # MMSIs, geofence, coordenadas BRASCO
 └── types/fleet.ts       # Interfaces TypeScript
 ```
 
