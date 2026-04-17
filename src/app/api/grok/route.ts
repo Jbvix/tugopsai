@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${XAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-2-latest',
+        model: 'grok-beta',
         messages: [
           {
             role: 'system',
