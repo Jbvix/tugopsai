@@ -134,4 +134,6 @@ src/
 
 ## Licença
 
-Veja [LICENSE](LICENSE).
+Software proprietário — todos os direitos reservados.  
+© 2026 Jossian Brito. Reprodução, cópia ou uso não autorizados são proibidos.  
+Veja [LICENSE](LICENSE) para os termos completos.
