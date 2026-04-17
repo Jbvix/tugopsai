@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",
+    "@types/ws": "^8.18.1",
     "axios": "^1.6.0",
     "clsx": "latest",
     "leaflet": "^1.9.4",
@@ -16,7 +17,8 @@
     "next": "latest",
     "react": "latest",
     "react-leaflet": "^5.0.0",
-    "tailwind-merge": "latest"
+    "tailwind-merge": "latest",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "latest",

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import WebSocket from 'ws';
 import { AIS_BOUNDING_BOX, FLEET_MMSI, isInsideGeofence } from '@/config/fleet';
 import { NAV_STATUS } from '@/types/ais';
 import type { AISPosition } from '@/types/ais';
