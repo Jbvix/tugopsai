@@ -213,7 +213,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="h-80 lg:h-96">
-            <FleetMap positions={aisPositions} />
+            <FleetMap />
           </div>
         </section>
       </div>
