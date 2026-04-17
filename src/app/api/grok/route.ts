@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${XAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-3-mini',
+        model: 'grok-2-latest',
         messages: [
           {
             role: 'system',
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('xAI API Error:', errText);
-      return NextResponse.json({ content: 'Erro de comunicação com o Agente. Tente novamente.' });
+      console.error('xAI API Error:', response.status, errText);
+      return NextResponse.json({ content: `[xAI ${response.status}] ${errText}` });
     }
 
     const data = await response.json();
