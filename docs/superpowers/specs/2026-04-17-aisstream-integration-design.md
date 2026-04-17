@@ -1,186 +1,26 @@
-# AISStream Integration — Design Spec
-**Data:** 2026-04-17  
-**Projeto:** TugLife OPS AI  
-**Status:** Aprovado
+# Spec: Integração AIS — Status
 
----
+> **OBSOLETO** — A integração via AISStream foi descontinuada.  
+> O AISStream não possui cobertura para a Baía de Guanabara.
 
-## Objetivo
+## Solução Adotada
 
-Integrar dados AIS em tempo real da frota SAAM (Base Brasco Caju, Rio de Janeiro) via AISStream.io, exibindo posição, velocidade e status navegacional no dashboard — tanto em mapa Leaflet quanto nos cards de rebocador existentes.
+Substituída por **MarineTraffic embed** com localização individual por MMSI:
 
----
+- Visão geral da frota: `zoom:15/centery:-22.8703/centerx:-43.2132`
+- Foco por rebocador: `zoom:17/mmsi:{MMSI}/get_info:false`
 
-## Frota — MMSIs
+Localização ativada por botões de abreviação nos cards de frota (`IB`, `LC`, `HL`, `AR`, `CH`, `AT`).
 
-| Rebocador       | MMSI        |
-|-----------------|-------------|
-| SAAM ITABIRA    | 710000348   |
-| SAAM ARIES      | 710020280   |
-| SAAM LANCELOT   | 710016030   |
-| SAAM CHILE      | 710021750   |
-| SAAM HOLANDA    | 710001593   |
-| SAAM ARTHUR     | 710015310   |
+## Limitação Conhecida
 
----
+A Baía de Guanabara não possui receptores AIS terrestres indexados pelo AISStream.  
+O MarineTraffic utiliza rede própria de receptores + satélite, cobrindo a área adequadamente.  
+O badge de status (Na Base / Fora da Base / Sem Sinal) permanece como "Sem Sinal" até que uma fonte AIS com cobertura local seja integrada.
 
-## Arquitetura
+## Alternativa Futura para Geofence Automático
 
-```
-Dashboard (browser)
-  │
-  ├─ polling GET /api/ais  (a cada 60s)
-  │       │
-  │       └─ WebSocket → wss://stream.aisstream.io/v0/stream
-  │               │  subscreve pelos 6 MMSIs
-  │               │  aguarda 4s de dados
-  │               └─ retorna AISPosition[]
-  │
-  ├─ <FleetMap />  ← Leaflet + OpenStreetMap
-  │
-  └─ cards existentes ← enriquecidos com SOG, rumo, status nav
-```
-
----
-
-## Variável de Ambiente
-
-| Variável           | Onde configurar        |
-|--------------------|------------------------|
-| `AISSTREAM_API_KEY`| Netlify → Environment Variables (já configurada) |
-
----
-
-## Arquivos Novos
-
-| Arquivo | Responsabilidade |
-|---|---|
-| `src/app/api/ais/route.ts` | Bridge WebSocket AISStream → HTTP GET |
-| `src/components/tuglife/FleetMap.tsx` | Mapa Leaflet com marcadores dos tugs |
-| `src/hooks/useAISData.ts` | Hook de polling (60s), estados e cache |
-| `src/types/ais.ts` | Tipos `AISPosition`, `NavStatus` |
-| `src/config/fleet.ts` | Mapeamento MMSI → nome do rebocador |
-
----
-
-## Tipos de Dados
-
-```typescript
-// src/types/ais.ts
-interface AISPosition {
-  mmsi: string
-  nome: string        // ex: "SAAM ITABIRA"
-  lat: number
-  lon: number
-  sog: number         // velocidade sobre o fundo (knots)
-  cog: number         // rumo sobre o fundo (graus 0-360)
-  heading: number     // proa verdadeira (graus 0-360)
-  navStatus: string   // "Moored" | "Under way using engine" | "At anchor" | ...
-  updatedAt: string   // ISO 8601 UTC
-}
-```
-
----
-
-## API Route — `/api/ais`
-
-**Método:** GET  
-**Tempo estimado:** 4–5s (dentro do limite de 10s do Netlify free tier)
-
-**Fluxo:**
-1. Abre WebSocket para `wss://stream.aisstream.io/v0/stream`
-2. Envia subscription com os 6 MMSIs dentro de 3s (requisito AISStream)
-3. Coleta mensagens `PositionReport` por 4 segundos
-4. Fecha conexão e retorna `AISPosition[]`
-
-**Subscription message:**
-```json
-{
-  "APIKey": "<AISSTREAM_API_KEY>",
-  "BoundingBoxes": [[[-23.1, -43.4], [-22.6, -43.0]]],
-  "FiltersShipMMSI": ["710000348","710020280","710016030","710021750","710001593","710015310"],
-  "FilterMessageTypes": ["PositionReport"]
-}
-```
-
-**Edge cases:**
-| Situação | Comportamento |
-|---|---|
-| Tug sem sinal AIS nos 4s | Retorna `null` para aquele MMSI — card exibe "Sem sinal AIS" |
-| AISStream indisponível | Retorna array vazio — dashboard mantém última posição em cache local |
-| Timeout excedido | Fecha WS e retorna posições coletadas até o momento |
-
----
-
-## Hook — `useAISData`
-
-```
-Estados: positions: AISPosition[], loading: boolean, error: boolean, lastUpdated: Date | null
-- Chama GET /api/ais ao montar o componente
-- Repete a cada 60 segundos via setInterval
-- Em erro: mantém posições anteriores + exibe aviso "AIS desatualizado Xmin"
-- Limpa o intervalo no unmount
-```
-
----
-
-## Componente — `FleetMap`
-
-- **Renderização:** client-only via `dynamic(() => import(...), { ssr: false })` — Leaflet não suporta SSR
-- **Centro inicial:** Baía de Guanabara `[-22.88, -43.18]`, zoom 12
-- **Tiles:** OpenStreetMap (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`)
-
-**Marcadores:**
-| Condição | Cor |
-|---|---|
-| SOG < 0.5 kn | Verde (parado/atracado) |
-| SOG 0.5–3 kn | Amarelo (manobra lenta) |
-| SOG > 3 kn | Azul (em trânsito) |
-
-- Ícone SVG de âncora/rebocador rotacionado pelo `heading`
-- Tooltip ao click: nome, SOG, rumo, status nav, `updatedAt`
-
-**Geofence — Base SAAM Brasco Caju:**
-- Polígono `L.polygon()` sobreposto ao cais do Porto Brasco
-- Coordenadas aproximadas (ajustáveis):
-  ```
-  [-22.878, -43.219]  // NW — entrada do cais
-  [-22.873, -43.211]  // NE
-  [-22.882, -43.206]  // SE
-  [-22.887, -43.214]  // SW
-  ```
-- Estilo: borda azul-naval `#3b82f6`, preenchimento `rgba(59,130,246,0.12)`
-- Label fixo: `⚓ Base SAAM — Brasco Caju`
-- Lógica: se `lat/lon` do rebocador cair dentro do polígono → status automático `"Na Base"` nos cards (sobrescreve `navStatus` do AIS)
-
----
-
-## Integração no Dashboard
-
-**Header:** Badge `AIS ●` — verde se dados < 2min, cinza se desatualizado
-
-**Cards de rebocador** — linha adicional:
-```
-🛰 4.2 kn  ·  📍 -22.89, -43.17  ·  ⚓ Atracado  ·  há 45s
-```
-
-**Mapa:** Inserido entre o header e as colunas existentes de frota/escala, largura total (`col-span-12`), altura fixa de 320px em mobile e 400px em desktop.
-
----
-
-## Dependências Novas
-
-```json
-"leaflet": "^1.9.4",
-"react-leaflet": "^4.2.1",
-"@types/leaflet": "^1.9.8"
-```
-
----
-
-## Fora do Escopo
-
-- Histórico de trajectória (trilha do rebocador)
-- Alertas de geofence por email/push
-- Camada náutica OpenSeaMap (pode ser adicionada futuramente)
-- Integração com dados de calado ou AIS dinâmico tipo B
+| Serviço | Custo | Cobertura |
+|---------|-------|-----------|
+| AISHub (`aishub.net`) | Gratuito (registro) | Global |
+| MarineTraffic API | 100 calls/mês grátis | Global |
