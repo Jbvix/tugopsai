@@ -58,28 +58,6 @@ function formatRelativeAge(value: Date | string | null): string {
   return `há ${diffHours}h`;
 }
 
-function AISBadge({ error, loading, lastUpdated }: { error: boolean; loading: boolean; lastUpdated: Date | null }) {
-  const ageMs = lastUpdated ? Date.now() - lastUpdated.getTime() : null;
-  const isFresh = !error && ageMs !== null && ageMs < 120_000;
-  const statusClass = isFresh
-    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-    : 'bg-slate-500/15 text-slate-300 border-slate-500/30';
-  const dotClass = isFresh ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400';
-
-  let label = 'AIS OFF';
-  if (loading && !lastUpdated) {
-    label = 'AIS...';
-  } else if (!error && lastUpdated) {
-    label = `AIS ${formatRelativeAge(lastUpdated)}`;
-  }
-
-  return (
-    <div className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusClass}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
-      <span>{label}</span>
-    </div>
-  );
-}
 
 function TugAISLine({ position }: { position?: AISPosition }) {
   if (!position) {
@@ -118,7 +96,7 @@ export default function Dashboard() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorData, setErrorData]           = useState(false);
   const [simulatedInitialDelay, setSimulatedInitialDelay] = useState(true);
-  const { positions: aisPositions, loading: aisLoading, error: aisError, lastUpdated: aisUpdated } = useAISData();
+  const { positions: aisPositions } = useAISData();
 
   useEffect(() => {
     Promise.all([
@@ -192,7 +170,6 @@ export default function Dashboard() {
               <>
                 {fleetData.resumo.emManutencao > 0 && <StatBadge count={fleetData.resumo.emManutencao} color="bg-red-500/15 text-red-400 border-red-500/30" label="Retido" />}
                 {fleetData.resumo.disponiveis > 0 && <StatBadge count={fleetData.resumo.disponiveis} color="bg-green-500/15 text-green-400 border-green-500/30" label="Livre" />}
-                <AISBadge error={aisError} loading={aisLoading} lastUpdated={aisUpdated} />
               </>
             ) : <div className="h-6 w-20 bg-white/10 rounded-full animate-pulse" />}
           </div>
@@ -205,11 +182,8 @@ export default function Dashboard() {
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.24em] text-cyan-200">Mapa AIS da Frota</h2>
               <p className="mt-1 text-[10px] text-slate-400">
-                Base Brasco Caju · Polling de 60s · {aisUpdated ? `Última leitura ${formatRelativeAge(aisUpdated)}` : 'Aguardando primeira leitura'}
+                Base Brasco Caju · Baía de Guanabara
               </p>
-            </div>
-            <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
-              {aisPositions.length > 0 ? `${aisPositions.length} com sinal` : 'Sem sinal'}
             </div>
           </div>
           <div className="h-80 lg:h-96">
