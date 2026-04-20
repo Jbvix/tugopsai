@@ -30,7 +30,7 @@ A dependência exclusiva do preenchimento manual do CHEMAQ é um gargalo de fiab
 Um único prompt para toda a frota torna-se ineficiente e caro (tokens).
 
 * **Solução:** Implementar uma arquitetura de agentes:  
-  * **Agente Analista (Grok):** Focado em tendências de longo prazo.  
+  * **Agente Analista (IA):** Focado em tendências de longo prazo.  
   * **Agente Operacional:** Focado em alertas críticos imediatos.  
   * **Agente de Compras:** Focado apenas em cotações e otimização de estoque.
 

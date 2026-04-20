@@ -9,7 +9,7 @@ const loadingSteps = [
   "Lendo tábua de praticagem RJ-1...",
   "Calculando POB e janelas operacionais...",
   "Verificando inventário Brasco Caju...",
-  "Despertando cluster de IA (Grok)..."
+  "Despertando cluster de IA..."
 ];
 
 export function SplashScreen({ onFinish }: { onFinish?: () => void }) {

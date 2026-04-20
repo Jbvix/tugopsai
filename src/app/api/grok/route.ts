@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     if (!XAI_API_KEY) {
       // Fallback modo offline — simula resposta da IA
       return NextResponse.json({
-        content: `[MODO OFFLINE] Análise recebida: "${prompt}". Configure XAI_API_KEY nas variáveis de ambiente da Netlify para ativar o Agente Grok completo.`
+        content: `[MODO OFFLINE] Análise recebida: "${prompt}". Configure XAI_API_KEY nas variáveis de ambiente da Netlify para ativar o Agente IA completo.`
       });
     }
 

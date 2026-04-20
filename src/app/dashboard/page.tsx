@@ -418,12 +418,12 @@ export default function Dashboard() {
             </div>
           </section>
 
-          {/* CHAT GROK */}
+          {/* CHAT IA */}
           <section className="flex-1 min-h-[400px] flex flex-col bg-gradient-to-br from-[#0a1f3a] to-[#0d1b2a] border border-blue-500/15 rounded-2xl overflow-hidden">
             <header className="px-4 py-3 border-b border-white/5 flex items-center gap-2 shrink-0 bg-black/20">
               <Bot size={16} className="text-blue-400" />
               <div>
-                <h2 className="text-xs font-bold uppercase tracking-widest text-blue-400">Terminal Agente Grok</h2>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-blue-400">Terminal Agente IA</h2>
                 <p className="text-[9px] text-blue-400/60 uppercase">Manutenção · Logística · Almoxarifado</p>
               </div>
               <div className="ml-auto flex items-center gap-1.5">
